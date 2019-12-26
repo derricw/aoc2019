@@ -22,11 +22,6 @@ var D map[string]Vec2D = map[string]Vec2D{
 	"R": Vec2D{1, 0},
 }
 
-// Dot product
-func (v Vec2D) Dot(u Vec2D) Vec2D {
-	return Vec2D{v[0] * u[0], v[1] * u[1]}
-}
-
 // Translate
 func (v Vec2D) Trans(u Vec2D) Vec2D {
 	return Vec2D{v[0] + u[0], v[1] + u[1]}
