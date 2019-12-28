@@ -5,12 +5,7 @@ import (
 	"strconv"
 )
 
-var (
-	MODE_POSITION  int64 = 0
-	MODE_IMMEDIATE int64 = 1
-)
-
-func parseOpcode(opcode int64) (int64, []int64) {
+func ParseOpcode(opcode int64) (int64, []int64) {
 	mode2 := opcode / 10000
 	mode1 := (opcode % 10000) / 1000
 	mode0 := (opcode % 1000) / 100
@@ -35,80 +30,116 @@ func NewProcess(memory, inputBuffer, outputBuffer []int64) *Process {
 
 func (p *Process) Start() {
 	var opcode int64
+mainLoop:
 	for {
 		opcode = p.Memory[p.pointer]
-		op, modes := parseOpcode(opcode)
-		fmt.Printf("%d, %v\n", op, modes)
-		if opcode == 99 {
-			break
-		}
-		if op == 1 {
-			// add
+		op, modes := ParseOpcode(opcode)
+		switch op {
+		case 99:
+			break mainLoop
+		case 1:
 			p.Add(modes)
-		} else if op == 2 {
-			// multiply
+		case 2:
 			p.Multiply(modes)
-		} else if op == 3 {
-			// input
+		case 3:
 			p.Input()
-		} else if op == 4 {
-			// output
-			p.Output()
-		} else {
+		case 4:
+			p.Output(modes)
+		case 5:
+			p.JumpIfTrue(modes)
+		case 6:
+			p.JumpIfFalse(modes)
+		case 7:
+			p.LessThan(modes)
+		case 8:
+			p.Equals(modes)
+		default:
 			panic(fmt.Sprintf("UNKNOWN OPCODE: %d MEMDUMP %v", op, p.Memory))
 		}
 	}
 }
 
-func (p *Process) readMemory(param int64, mode int64) int64 {
+func (p *Process) readMemory(address int64, mode int64) int64 {
 	if mode == 0 {
 		// position mode
-		return p.Memory[param]
+		return p.Memory[address]
 	} else if mode == 1 {
 		// immediate mode
-		return param
+		return address
 	} else {
-		panic(fmt.Sprintf("unknown mode: %d", mode))
+		panic(fmt.Sprintf("UNKNOWN MODE: %d", mode))
 	}
 }
 
 func (p *Process) Add(modes []int64) {
-	p0 := p.Memory[p.pointer+1]
-	p1 := p.Memory[p.pointer+2]
+	val0 := p.readMemory(p.Memory[p.pointer+1], modes[0])
+	val1 := p.readMemory(p.Memory[p.pointer+2], modes[1])
 	result := p.Memory[p.pointer+3]
-	fmt.Printf("Adding: %d + %d => %d modes: %v\n", p0, p1, result, modes)
-	val0 := p.readMemory(p0, modes[0])
-	val1 := p.readMemory(p1, modes[1])
-	fmt.Printf("Adding: %d + %d => %d\n", val0, val1, result)
 	p.Memory[result] = val0 + val1
 	p.pointer += 4
 }
 
 func (p *Process) Multiply(modes []int64) {
-	p0 := p.Memory[p.pointer+1]
-	p1 := p.Memory[p.pointer+2]
+	val0 := p.readMemory(p.Memory[p.pointer+1], modes[0])
+	val1 := p.readMemory(p.Memory[p.pointer+2], modes[1])
 	result := p.Memory[p.pointer+3]
-	fmt.Printf("Multiplying: %d * %d => %d modes: %v\n", p0, p1, result, modes)
-	val0 := p.readMemory(p0, modes[0])
-	val1 := p.readMemory(p1, modes[1])
 	p.Memory[result] = val0 * val1
 	p.pointer += 4
 }
 
 func (p *Process) Input() {
 	val := p.StdIn[0]
-	p.StdIn = p.StdIn[1:] // no slice.Pop()
-	fmt.Printf("Reading from input: %d\n", val)
+	p.StdIn = p.StdIn[1:] // coll how there is no slice.Pop()
 	p.Memory[p.Memory[p.pointer+1]] = val
 	p.pointer += 2
 }
 
-func (p *Process) Output() {
-	val := p.Memory[p.Memory[p.pointer+1]]
-	fmt.Printf("Writing to output: %d\n", val)
-	fmt.Printf("mem: %v\n", p.Memory)
+func (p *Process) Output(modes []int64) {
+	val := p.readMemory(p.Memory[p.pointer+1], modes[0])
 	p.StdOut = append(p.StdOut, val)
 	p.pointer += 2
+}
+
+func (p *Process) JumpIfTrue(modes []int64) {
+	val := p.readMemory(p.Memory[p.pointer+1], modes[0])
+	if val != 0 {
+		p.pointer = p.readMemory(p.Memory[p.pointer+2], modes[1])
+	} else {
+		p.pointer += 3
+	}
+}
+
+func (p *Process) JumpIfFalse(modes []int64) {
+	val := p.readMemory(p.Memory[p.pointer+1], modes[0])
+	if val == 0 {
+		p.pointer = p.readMemory(p.Memory[p.pointer+2], modes[1])
+	} else {
+		p.pointer += 3
+	}
+}
+
+func (p *Process) LessThan(modes []int64) {
+	val0 := p.readMemory(p.Memory[p.pointer+1], modes[0])
+	val1 := p.readMemory(p.Memory[p.pointer+2], modes[1])
+	result := p.Memory[p.pointer+3]
+	if val0 < val1 {
+		p.Memory[result] = 1
+	} else {
+		p.Memory[result] = 0
+	}
+	p.pointer += 4
+}
+
+func (p *Process) Equals(modes []int64) {
+	val0 := p.readMemory(p.Memory[p.pointer+1], modes[0])
+	val1 := p.readMemory(p.Memory[p.pointer+2], modes[1])
+	result := p.Memory[p.pointer+3]
+	if val0 == val1 {
+		p.Memory[result] = 1
+	} else {
+		p.Memory[result] = 0
+	}
+	p.pointer += 4
 }
 
 type Computer struct{}

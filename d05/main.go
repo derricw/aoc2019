@@ -12,7 +12,6 @@ import (
 func solve_p1(in []string) {
 	c := Computer{}
 	program := c.Compile(in)
-	//fmt.Println(program)
 	inBuff := []int64{1}
 	outBuff := make([]int64, 0)
 	process := c.Run(program, inBuff, outBuff)
@@ -20,7 +19,12 @@ func solve_p1(in []string) {
 }
 
 func solve_p2(in []string) {
-	fmt.Printf("Pt2 Answer: \n")
+	c := Computer{}
+	program := c.Compile(in)
+	inBuff := []int64{5}
+	outBuff := make([]int64, 0)
+	process := c.Run(program, inBuff, outBuff)
+	fmt.Printf("Pt2 Answer: %d\n", process.StdOut)
 }
 
 func readInput(in io.Reader) (data []string) {
