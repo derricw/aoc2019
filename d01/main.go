@@ -8,7 +8,7 @@ import (
 	"strconv"
 )
 
-func solve_p1(in []string) {
+func solveP1(in []string) {
 	totalFuel := 0
 	for _, massStr := range in {
 		mass, err := strconv.Atoi(massStr)
@@ -21,7 +21,7 @@ func solve_p1(in []string) {
 	fmt.Printf("total fuel: %d\n", totalFuel)
 }
 
-func solve_p2(in []string) {
+func solveP2(in []string) {
 	totalFuel := 0
 	for _, massStr := range in {
 		mass, err := strconv.Atoi(massStr)
@@ -52,6 +52,6 @@ func readInput(in io.Reader) (data []string) {
 
 func main() {
 	in := readInput(os.Stdin)
-	solve_p1(in)
-	solve_p2(in)
+	solveP1(in)
+	solveP2(in)
 }

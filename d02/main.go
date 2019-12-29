@@ -48,7 +48,7 @@ func (c *Computer) Compile(code []string) []int64 {
 	return program
 }
 
-func solve_p1(in []string) {
+func solveP1(in []string) {
 	in[1] = "12"
 	in[2] = "2"
 	c := Computer{}
@@ -58,7 +58,7 @@ func solve_p1(in []string) {
 	fmt.Printf("Pt1 Answer: %d\n", output[0])
 }
 
-func solve_p2(in []string) {
+func solveP2(in []string) {
 	var goal int64 = 19690720
 
 	c := Computer{}
@@ -94,6 +94,6 @@ func main() {
 	copy(in1, in)
 	copy(in2, in)
 
-	solve_p1(in1)
-	solve_p2(in2)
+	solveP1(in1)
+	solveP2(in2)
 }

@@ -42,7 +42,7 @@ func checkV2(n string) bool {
 	return double
 }
 
-func solve_p1(low, high int) {
+func solveP1(low, high int) {
 	count := 0
 	for i := low; i < high+1; i++ {
 		stri := strconv.Itoa(i)
@@ -53,7 +53,7 @@ func solve_p1(low, high int) {
 	fmt.Printf("Pt1 Answer: %d\n", count)
 }
 
-func solve_p2(low, high int) {
+func solveP2(low, high int) {
 	count := 0
 	for i := low; i < high+1; i++ {
 		stri := strconv.Itoa(i)
@@ -68,6 +68,6 @@ func main() {
 	low, _ := strconv.Atoi(os.Args[1])
 	high, _ := strconv.Atoi(os.Args[2])
 
-	solve_p1(low, high)
-	solve_p2(low, high)
+	solveP1(low, high)
+	solveP2(low, high)
 }

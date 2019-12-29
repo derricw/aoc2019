@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-func solve_p1(in []string) {
+func solveP1(in []string) {
 	c := Computer{}
 	program := c.Compile(in)
 	inBuff := []int64{1}
@@ -18,7 +18,7 @@ func solve_p1(in []string) {
 	fmt.Printf("Pt1 Answer: %d\n", process.StdOut)
 }
 
-func solve_p2(in []string) {
+func solveP2(in []string) {
 	c := Computer{}
 	program := c.Compile(in)
 	inBuff := []int64{5}
@@ -44,6 +44,6 @@ func main() {
 	copy(in1, in)
 	copy(in2, in)
 
-	solve_p1(in1)
-	solve_p2(in2)
+	solveP1(in1)
+	solveP2(in2)
 }

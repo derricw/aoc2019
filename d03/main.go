@@ -124,7 +124,7 @@ func FindShortestPath(w0, w1 WirePath, crosses []Vec2D) int {
 	return minDist
 }
 
-func solve_p1(in [][]string) {
+func solveP1(in [][]string) {
 	w0 := NewWireFromPath(in[0])
 	w1 := NewWireFromPath(in[1])
 	crosses := FindIntersections(w0, w1)
@@ -132,7 +132,7 @@ func solve_p1(in [][]string) {
 	fmt.Printf("Pt1 Answer: %d\n", closest)
 }
 
-func solve_p2(in [][]string) {
+func solveP2(in [][]string) {
 	wp0 := NewWirePathFromPath(in[0])
 	wp1 := NewWirePathFromPath(in[1])
 	w0 := NewWireFromWirePath(wp0)
@@ -160,6 +160,6 @@ func main() {
 	copy(in1, in)
 	copy(in2, in)
 
-	solve_p1(in1)
-	solve_p2(in2)
+	solveP1(in1)
+	solveP2(in2)
 }
