@@ -71,7 +71,7 @@ func (om *OrbitMap) CalculateDistance(src, dest string) int {
 		Distance int
 	}
 	toVisit := make([]*Visit, 0)
-	visited := make(map[string]struct{})
+	visited := HashSet{}
 	sobj := om.Objects[src]
 	toVisit = append(toVisit, &Visit{Name: sobj.Parent.Name, Distance: 1})
 	for _, obj := range sobj.Satellites {
@@ -84,7 +84,7 @@ func (om *OrbitMap) CalculateDistance(src, dest string) int {
 			panic("failed to find route")
 		}
 		current, toVisit = toVisit[0], toVisit[1:] // frontpop!
-		if _, ok := visited[current.Name]; ok {
+		if visited.Contains(current.Name) {
 			continue
 		}
 		if current.Name == dest {
@@ -103,7 +103,7 @@ func (om *OrbitMap) CalculateDistance(src, dest string) int {
 				Distance: current.Distance + 1,
 			})
 		}
-		visited[current.Name] = struct{}{}
+		visited.Add(current.Name)
 	}
 }
 
