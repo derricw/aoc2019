@@ -32,7 +32,6 @@ func NewObject(name string) *Object {
 
 type OrbitMap struct {
 	Objects map[string]*Object
-	COM     *Object
 }
 
 func (om *OrbitMap) AddOrbit(orbit string) {
@@ -53,9 +52,6 @@ func (om *OrbitMap) AddOrbit(orbit string) {
 	sobj.Parent = pobj
 	om.Objects[parent] = pobj
 	om.Objects[sat] = sobj
-	if parent == "COM" {
-		om.COM = pobj
-	}
 }
 
 func (om *OrbitMap) TotalOrbits() int {
@@ -137,7 +133,6 @@ func readInput(in io.Reader) (data []string) {
 	for s.Scan() {
 		data = append(data, s.Text())
 	}
-	//data = strings.Split(data[0], ",")
 	return
 }
 
