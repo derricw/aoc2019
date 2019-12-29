@@ -15,3 +15,7 @@ func (hs *HashSet) Contains(obj interface{}) bool {
 	_, ok := hs.data[obj]
 	return ok
 }
+
+func (hs *HashSet) Delete(obj interface{}) {
+	delete(hs.data, obj)
+}
