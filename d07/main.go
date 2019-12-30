@@ -66,6 +66,30 @@ func (a *Amp) Start() {
 	a.process = c.Run(a.Program, a.Input, a.Output)
 }
 
+func RunAmpChain(program []int64, phases []int64) int64 {
+	amps := make([]*Amp, 0)
+	var wg sync.WaitGroup
+	for i, phase := range phases {
+		amp := NewAmp(program)
+		if i > 0 {
+			amp.WithInput(amps[i-1].Output)
+		}
+		amps = append(amps, amp)
+		go func() {
+			defer wg.Done()
+			amp.Start()
+		}()
+		wg.Add(1)
+		if i == len(phases)-1 {
+			amp.WithOutput(amps[0].Input)
+		}
+		amp.Input <- phase
+	}
+	amps[0].Input <- 0
+	wg.Wait()
+	return <-amps[len(amps)-1].Output
+}
+
 func solveP1(in []string) {
 	c := Computer{}
 	phasePossibilities := []int64{0, 1, 2, 3, 4}
@@ -73,18 +97,7 @@ func solveP1(in []string) {
 	phasePerms := Permutations(phasePossibilities)
 	program := c.Compile(in)
 	for _, phases := range phasePerms {
-		amps := make([]*Amp, 0)
-		for i, phase := range phases {
-			amp := NewAmp(program)
-			if i > 0 {
-				amp.WithInput(amps[i-1].Output)
-			}
-			amps = append(amps, amp)
-			go amp.Start()
-			amp.Input <- phase
-		}
-		amps[0].Input <- 0
-		output := <-amps[len(amps)-1].Output
+		output := RunAmpChain(program, phases)
 		outPoss = append(outPoss, output)
 	}
 	sort.Slice(outPoss, func(i, j int) bool { return outPoss[i] > outPoss[j] })
@@ -98,27 +111,7 @@ func solveP2(in []string) {
 	phasePerms := Permutations(phasePossibilities)
 	program := c.Compile(in)
 	for _, phases := range phasePerms {
-		amps := make([]*Amp, 0)
-		var wg sync.WaitGroup
-		for i, phase := range phases {
-			amp := NewAmp(program)
-			if i > 0 {
-				amp.WithInput(amps[i-1].Output)
-			}
-			amps = append(amps, amp)
-			go func() {
-				defer wg.Done()
-				amp.Start()
-			}()
-			wg.Add(1)
-			if i == len(phases)-1 {
-				amp.WithOutput(amps[0].Input)
-			}
-			amp.Input <- phase
-		}
-		amps[0].Input <- 0
-		wg.Wait()
-		output := <-amps[len(amps)-1].Output
+		output := RunAmpChain(program, phases)
 		outPoss = append(outPoss, output)
 	}
 	sort.Slice(outPoss, func(i, j int) bool { return outPoss[i] > outPoss[j] })
