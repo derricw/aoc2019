@@ -34,7 +34,6 @@ mainLoop:
 	for {
 		opcode = p.Memory[p.pointer]
 		op, modes := ParseOpcode(opcode)
-		//fmt.Printf("op: %d, modes: %d\n", op, modes)
 		switch op {
 		case 1:
 			p.Add(modes)
