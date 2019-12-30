@@ -15,16 +15,16 @@ func ParseOpcode(opcode int64) (int64, []int64) {
 
 type Process struct {
 	Memory  []int64
-	StdOut  []int64
-	StdIn   []int64
+	StdOut  chan<- int64
+	StdIn   <-chan int64
 	pointer int64
 }
 
-func NewProcess(memory, inputBuffer, outputBuffer []int64) *Process {
+func NewProcess(memory []int64, stdin <-chan int64, stdout chan<- int64) *Process {
 	return &Process{
 		Memory: memory,
-		StdIn:  inputBuffer,
-		StdOut: outputBuffer,
+		StdIn:  stdin,
+		StdOut: stdout,
 	}
 }
 
@@ -34,9 +34,8 @@ mainLoop:
 	for {
 		opcode = p.Memory[p.pointer]
 		op, modes := ParseOpcode(opcode)
+		//fmt.Printf("op: %d, modes: %d\n", op, modes)
 		switch op {
-		case 99:
-			break mainLoop
 		case 1:
 			p.Add(modes)
 		case 2:
@@ -53,6 +52,8 @@ mainLoop:
 			p.LessThan(modes)
 		case 8:
 			p.Equals(modes)
+		case 99:
+			break mainLoop
 		default:
 			panic(fmt.Sprintf("UNKNOWN OPCODE: %d MEMDUMP %v", op, p.Memory))
 		}
@@ -88,15 +89,14 @@ func (p *Process) Multiply(modes []int64) {
 }
 
 func (p *Process) Input() {
-	val := p.StdIn[0]
-	p.StdIn = p.StdIn[1:] // coll how there is no slice.Pop()
+	val := <-p.StdIn
 	p.Memory[p.Memory[p.pointer+1]] = val
 	p.pointer += 2
 }
 
 func (p *Process) Output(modes []int64) {
 	val := p.readMemory(p.Memory[p.pointer+1], modes[0])
-	p.StdOut = append(p.StdOut, val)
+	p.StdOut <- val
 	p.pointer += 2
 }
 
@@ -144,7 +144,7 @@ func (p *Process) Equals(modes []int64) {
 
 type Computer struct{}
 
-func (c *Computer) Run(program, input, output []int64) *Process {
+func (c *Computer) Run(program []int64, input <-chan int64, output chan<- int64) *Process {
 	process := NewProcess(program, input, output)
 	process.Start()
 	return process

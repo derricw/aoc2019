@@ -8,6 +8,7 @@ import (
 	//"strconv"
 	"sort"
 	"strings"
+	"sync"
 )
 
 // Heap's algorithm for generating permutations
@@ -34,25 +35,57 @@ func Permutations(a []int64) (out [][]int64) {
 	return
 }
 
+type Amp struct {
+	Program []int64
+	process *Process
+	Input   chan int64
+	Output  chan int64
+}
+
+func NewAmp(program []int64) *Amp {
+	progCopy := make([]int64, len(program))
+	copy(progCopy, program)
+	return &Amp{
+		Program: progCopy,
+		Input:   make(chan int64, 10),
+		Output:  make(chan int64, 10),
+	}
+}
+
+func (a *Amp) WithOutput(output chan int64) *Amp {
+	a.Output = output
+	return a
+}
+
+func (a *Amp) WithInput(input chan int64) *Amp {
+	a.Input = input
+	return a
+}
+
+func (a *Amp) Start() {
+	c := Computer{}
+	a.process = c.Run(a.Program, a.Input, a.Output)
+}
+
 func solveP1(in []string) {
 	c := Computer{}
-	inPoss := []int64{0, 1, 2, 3, 4}
+	phasePossibilities := []int64{0, 1, 2, 3, 4}
 	outPoss := []int64{}
-	inPerms := Permutations(inPoss)
+	phasePerms := Permutations(phasePossibilities)
 	program := c.Compile(in)
-	for _, ampSequence := range inPerms {
-		fmt.Printf("Starting amp sequence: %v\n", ampSequence)
-		var output int64 = 0
-		for _, amp := range ampSequence {
-			progCopy := make([]int64, len(program))
-			var outBuff []int64
-			copy(progCopy, program)
-			inBuff := []int64{amp, output}
-			fmt.Printf("starting amp: %d, in: %v, out: %v\n", amp, inBuff, outBuff)
-			process := c.Run(progCopy, inBuff, outBuff)
-			fmt.Printf("result: %d\n", process.StdOut[0])
-			output = process.StdOut[0]
+	for _, phases := range phasePerms {
+		amps := make([]*Amp, 0)
+		for i, phase := range phases {
+			amp := NewAmp(program)
+			if i > 0 {
+				amp.WithInput(amps[i-1].Output)
+			}
+			amps = append(amps, amp)
+			go amp.Start()
+			amp.Input <- phase
 		}
+		amps[0].Input <- 0
+		output := <-amps[len(amps)-1].Output
 		outPoss = append(outPoss, output)
 	}
 	sort.Slice(outPoss, func(i, j int) bool { return outPoss[i] > outPoss[j] })
@@ -60,12 +93,37 @@ func solveP1(in []string) {
 }
 
 func solveP2(in []string) {
-	//c := Computer{}
-	//program := c.Compile(in)
-	//inBuff := []int64{5}
-	//outBuff := make([]int64, 0)
-	//process := c.Run(program, inBuff, outBuff)
-	//fmt.Printf("Pt2 Answer: %d\n", process.StdOut)
+	c := Computer{}
+	phasePossibilities := []int64{5, 6, 7, 8, 9}
+	outPoss := []int64{}
+	phasePerms := Permutations(phasePossibilities)
+	program := c.Compile(in)
+	for _, phases := range phasePerms {
+		amps := make([]*Amp, 0)
+		var wg sync.WaitGroup
+		for i, phase := range phases {
+			amp := NewAmp(program)
+			if i > 0 {
+				amp.WithInput(amps[i-1].Output)
+			}
+			amps = append(amps, amp)
+			go func() {
+				defer wg.Done()
+				amp.Start()
+			}()
+			wg.Add(1)
+			if i == len(phases)-1 {
+				amp.WithOutput(amps[0].Input)
+			}
+			amp.Input <- phase
+		}
+		amps[0].Input <- 0
+		wg.Wait()
+		output := <-amps[len(amps)-1].Output
+		outPoss = append(outPoss, output)
+	}
+	sort.Slice(outPoss, func(i, j int) bool { return outPoss[i] > outPoss[j] })
+	fmt.Printf("Pt2 Answer: %v\n", outPoss[0])
 }
 
 func readInput(in io.Reader) (data []string) {
