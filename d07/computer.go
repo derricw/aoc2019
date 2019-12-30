@@ -15,17 +15,29 @@ func ParseOpcode(opcode int64) (int64, []int64) {
 
 type Process struct {
 	Memory  []int64
-	StdOut  chan<- int64
-	StdIn   <-chan int64
+	Output  chan int64
+	Input   chan int64
 	pointer int64
 }
 
-func NewProcess(memory []int64, stdin <-chan int64, stdout chan<- int64) *Process {
+func NewProcess(memory []int64) *Process {
+	memCopy := make([]int64, len(memory))
+	copy(memCopy, memory)
 	return &Process{
-		Memory: memory,
-		StdIn:  stdin,
-		StdOut: stdout,
+		Memory: memCopy,
+		Input:  make(chan int64, 10),
+		Output: make(chan int64, 10),
 	}
+}
+
+func (p *Process) WithInput(in chan int64) *Process {
+	p.Input = in
+	return p
+}
+
+func (p *Process) WithOutput(out chan int64) *Process {
+	p.Output = out
+	return p
 }
 
 func (p *Process) Start() {
@@ -40,9 +52,9 @@ mainLoop:
 		case 2:
 			p.Multiply(modes)
 		case 3:
-			p.Input()
+			p.ReadInput()
 		case 4:
-			p.Output(modes)
+			p.WriteOutput(modes)
 		case 5:
 			p.JumpIfTrue(modes)
 		case 6:
@@ -87,15 +99,15 @@ func (p *Process) Multiply(modes []int64) {
 	p.pointer += 4
 }
 
-func (p *Process) Input() {
-	val := <-p.StdIn
+func (p *Process) ReadInput() {
+	val := <-p.Input
 	p.Memory[p.Memory[p.pointer+1]] = val
 	p.pointer += 2
 }
 
-func (p *Process) Output(modes []int64) {
+func (p *Process) WriteOutput(modes []int64) {
 	val := p.readMemory(p.Memory[p.pointer+1], modes[0])
-	p.StdOut <- val
+	p.Output <- val
 	p.pointer += 2
 }
 
@@ -143,8 +155,8 @@ func (p *Process) Equals(modes []int64) {
 
 type Computer struct{}
 
-func (c *Computer) Run(program []int64, input <-chan int64, output chan<- int64) *Process {
-	process := NewProcess(program, input, output)
+func (c *Computer) Run(program []int64, input chan int64, output chan int64) *Process {
+	process := NewProcess(program).WithInput(input).WithOutput(output)
 	process.Start()
 	return process
 }

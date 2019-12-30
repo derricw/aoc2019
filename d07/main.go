@@ -34,43 +34,11 @@ func Permutations(a []int64) (out [][]int64) {
 	return
 }
 
-type Amp struct {
-	Program []int64
-	process *Process
-	Input   chan int64
-	Output  chan int64
-}
-
-func NewAmp(program []int64) *Amp {
-	progCopy := make([]int64, len(program))
-	copy(progCopy, program)
-	return &Amp{
-		Program: progCopy,
-		Input:   make(chan int64, 10),
-		Output:  make(chan int64, 10),
-	}
-}
-
-func (a *Amp) WithOutput(output chan int64) *Amp {
-	a.Output = output
-	return a
-}
-
-func (a *Amp) WithInput(input chan int64) *Amp {
-	a.Input = input
-	return a
-}
-
-func (a *Amp) Start() {
-	c := Computer{}
-	a.process = c.Run(a.Program, a.Input, a.Output)
-}
-
 func RunAmpChain(program []int64, phases []int64) int64 {
-	amps := make([]*Amp, 0)
+	amps := make([]*Process, 0)
 	var wg sync.WaitGroup
 	for i, phase := range phases {
-		amp := NewAmp(program)
+		amp := NewProcess(program)
 		if i > 0 {
 			amp.WithInput(amps[i-1].Output)
 		}
