@@ -19,3 +19,18 @@ func (hs *HashSet) Contains(obj interface{}) bool {
 func (hs *HashSet) Delete(obj interface{}) {
 	delete(hs.data, obj)
 }
+
+func (hs *HashSet) Count() int {
+	return len(hs.data)
+}
+
+func (hs *HashSet) Union(other HashSet) HashSet {
+	newSet := HashSet{}
+	for k, _ := range hs.data {
+		newSet.Add(k)
+	}
+	for k, _ := range other.data {
+		newSet.Add(k)
+	}
+	return newSet
+}
