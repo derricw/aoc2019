@@ -87,19 +87,19 @@ func bestStation(af AsteroidField) (best Asteroid, bestLOS int) {
 	return best, bestLOS
 }
 
-func pewPew(af AsteroidField, best Asteroid, nth int) Asteroid {
+func pewPew(af AsteroidField, station Asteroid, nth int) Asteroid {
 	destroyed := 0
-	losMap := best.LOSMap(af)
+	losMap := station.LOSMap(af)
 	angles := losMap.Angles()
 	sort.Slice(angles, func(i, j int) bool { return angles[i] > angles[j] }) //reverse
 	for {
-		losMap := best.LOSMap(af)
+		losMap := station.LOSMap(af)
 		for _, angle := range angles {
 			line := losMap[angle]
 			if len(line) == 0 {
 				continue
 			}
-			nearest := best.FindNearest(line)
+			nearest := station.FindNearest(line)
 			af.Destroy(nearest)
 			destroyed++
 			if destroyed == nth {
