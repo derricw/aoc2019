@@ -76,9 +76,7 @@ func (losm LOSMap) Angles() []float64 {
 	return angles
 }
 
-func bestStation(af AsteroidField) (Asteroid, int) {
-	var best Asteroid
-	bestLOS := 0
+func bestStation(af AsteroidField) (best Asteroid, bestLOS int) {
 	for src, _ := range af {
 		LOSCount := src.CountLOS(af)
 		if LOSCount > bestLOS {
